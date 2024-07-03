@@ -24,6 +24,7 @@ INSURANCE_COST=(DAILY_RENT*(365*OCCUPANCY_RATE))*0.03
 MANAGEMENT_COST=5000
 CASH_DEDUCTION=0.05
 
+N_YEARS=10
 
 _houses=[]
 _details=[]
@@ -62,7 +63,7 @@ for i in range(0, SPLIT):
 
 
 year=1
-for i in range(0,15):
+for i in range(0,N_YEARS):
 
     details['Year']+=1
     _details.append(details.copy())
