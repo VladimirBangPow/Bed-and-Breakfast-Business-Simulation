@@ -1,2 +1,2 @@
-# Real Estate Bed and Breakfast Simulation
+# B-n-B Simulation
 Just read the file over... Modify if needed, and run it. I make some assumptions on the occupancy rate and property taxes (using a levy system).
