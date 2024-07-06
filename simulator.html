@@ -5,23 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airbnb Business Simulator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .chart-box {
+            flex: 1 1 calc(33.33% - 20px);
+            margin: 10px;
+            max-width: calc(33.33% - 20px);
+        }
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+        .inputs {
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Total Income</h2>
-    <canvas id="incomeChart" width="400" height="200"></canvas>
-    
-    <h2>Total Expenses</h2>
-    <canvas id="expensesChart" width="400" height="200"></canvas>
-    
-    <h2>Total Debt</h2>
-    <canvas id="debtChart" width="400" height="200"></canvas>
-    
-    <h2>Number of Properties</h2>
-    <canvas id="propertiesChart" width="400" height="200"></canvas>
-    
-    <h2>Cash</h2>
-    <canvas id="cashChart" width="400" height="200"></canvas>
+    <div class="inputs">
+        <label for="price">Price: </label><input type="number" id="price" value="1000000"><br>
+        <label for="downPayment">Down Payment: </label><input type="number" id="downPayment" value="200000"><br>
+        <label for="interestRate">Interest Rate (%): </label><input type="number" id="interestRate" value="3.5" step="0.1"><br>
+        <label for="loanTerm">Loan Term (years): </label><input type="number" id="loanTerm" value="30"><br>
+        <label for="cleaningCost">Cleaning Cost: </label><input type="number" id="cleaningCost" value="4500"><br>
+        <label for="rentalIncome">Rental Income: </label><input type="number" id="rentalIncome" value="33750"><br>
+        <label for="managementCost">Management Cost: </label><input type="number" id="managementCost" value="416"><br>
+        <label for="cashWithholdPercentage">Cash Withhold Percentage (%): </label><input type="number" id="cashWithholdPercentage" value="10" step="0.1"><br>
+        <button onclick="generateReports()">Generate Reports</button>
+    </div>
+    <div class="chart-container">
+        <div class="chart-box">
+            <h3>Total Income</h3>
+            <canvas id="incomeChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Total Expenses</h3>
+            <canvas id="expensesChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Total Debt</h3>
+            <canvas id="debtChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Number of Properties</h3>
+            <canvas id="propertiesChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Cash Balance</h3>
+            <canvas id="cashChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Total Equity</h3>
+            <canvas id="equityChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Summary</h3>
+            <canvas id="summaryChart"></canvas>
+        </div>
+    </div>
 
     <script src="simulator.js"></script>
 </body>
 </html>
+
+

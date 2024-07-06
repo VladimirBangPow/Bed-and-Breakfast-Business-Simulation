@@ -41,7 +41,8 @@ class Property {
         return {
             income: yearlyIncome,
             expenses: yearlyMortgage + yearlyTax + yearlyCleaning + yearlyManagement,
-            remainingDebt: this.remainingDebt
+            remainingDebt: this.remainingDebt,
+            equity: this.price - this.remainingDebt
         };
     }
 }
@@ -83,12 +84,14 @@ class AirbnbBusinessSimulator {
             let totalIncome = 0;
             let totalExpenses = 0;
             let totalDebt = 0;
+            let totalEquity = 0;
 
             this.properties.forEach(property => {
-                const { income, expenses, remainingDebt } = property.simulateYear();
+                const { income, expenses, remainingDebt, equity } = property.simulateYear();
                 totalIncome += income;
                 totalExpenses += expenses;
                 totalDebt += remainingDebt;
+                totalEquity += equity;
             });
 
             // Calculate the yearly profit and adjust for cash withholding
@@ -122,7 +125,8 @@ class AirbnbBusinessSimulator {
                 totalExpenses,
                 totalDebt,
                 propertiesCount: this.properties.length,
-                cashBalance: this.cashBalance
+                cashBalance: this.cashBalance,
+                totalEquity: totalEquity
             });
         }
     }
@@ -185,6 +189,43 @@ class AirbnbBusinessSimulator {
                         borderWidth: 1
                     }]
                 };
+            case 'equity':
+                return {
+                    labels: this.yearlyData.map(data => `Year ${data.year}`),
+                    datasets: [{
+                        label: 'Total Equity',
+                        data: this.yearlyData.map(data => data.totalEquity),
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                };
+            case 'summary':
+                return {
+                    labels: ['Total Income', 'Total Expenses', 'Total Debt', 'Total Equity'],
+                    datasets: [{
+                        label: 'Summary',
+                        data: [
+                            this.yearlyData.reduce((sum, data) => sum + data.totalIncome, 0),
+                            this.yearlyData.reduce((sum, data) => sum + data.totalExpenses, 0),
+                            this.yearlyData.reduce((sum, data) => sum + data.totalDebt, 0),
+                            this.yearlyData[this.yearlyData.length - 1].totalEquity
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(153, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
             default:
                 return {};
         }
@@ -193,15 +234,16 @@ class AirbnbBusinessSimulator {
     // Render Chart
     renderChart(type, elementId) {
         const ctx = document.getElementById(elementId).getContext('2d');
+        const chartType = type === 'summary' ? 'pie' : 'line';
         new Chart(ctx, {
-            type: 'line',
+            type: chartType,
             data: this.generateChartData(type),
             options: {
-                scales: {
+                scales: type !== 'summary' ? {
                     y: {
                         beginAtZero: true
                     }
-                }
+                } : {}
             }
         });
     }
@@ -212,23 +254,35 @@ class AirbnbBusinessSimulator {
         this.renderChart('debt', 'debtChart');
         this.renderChart('properties', 'propertiesChart');
         this.renderChart('cash', 'cashChart');
+        this.renderChart('equity', 'equityChart');
+        this.renderChart('summary', 'summaryChart');
     }
 }
 
-// Example usage
-const simulator = new AirbnbBusinessSimulator();
-simulator.addProperty({
-    price: 1000000,
-    downPayment: 200000,
-    interestRate: 3.5,
-    loanTerm: 30,
-    cleaningCost: 4500,
-    rentalIncome: 33750,
-    managementCost: 416
-}); // Initial property with named parameters
+// Function to generate reports based on input values
+function generateReports() {
+    const price = parseFloat(document.getElementById('price').value);
+    const downPayment = parseFloat(document.getElementById('downPayment').value);
+    const interestRate = parseFloat(document.getElementById('interestRate').value);
+    const loanTerm = parseInt(document.getElementById('loanTerm').value);
+    const cleaningCost = parseFloat(document.getElementById('cleaningCost').value);
+    const rentalIncome = parseFloat(document.getElementById('rentalIncome').value);
+    const managementCost = parseFloat(document.getElementById('managementCost').value);
+    const cashWithholdPercentage = parseFloat(document.getElementById('cashWithholdPercentage').value);
 
-// Set cash withholding percentage (e.g., 10% of income each year)
-simulator.setCashWithholdPercentage(5);
+    const simulator = new AirbnbBusinessSimulator();
+    simulator.addProperty({
+        price,
+        downPayment,
+        interestRate,
+        loanTerm,
+        cleaningCost,
+        rentalIncome,
+        managementCost
+    });
 
-simulator.simulateYears(10);
-simulator.renderAllCharts();
+    simulator.setCashWithholdPercentage(cashWithholdPercentage);
+
+    simulator.simulateYears(10);
+    simulator.renderAllCharts();
+}
