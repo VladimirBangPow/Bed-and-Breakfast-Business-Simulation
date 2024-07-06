@@ -1,6 +1,6 @@
 // Property class
 class Property {
-    constructor({ name, price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome }) {
+    constructor({ name, price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome, managementCost }) {
         this.name = name;
         this.price = price;
         this.downPayment = downPayment;
@@ -8,6 +8,7 @@ class Property {
         this.loanTerm = loanTerm;
         this.cleaningCost = cleaningCost;
         this.rentalIncome = rentalIncome;
+        this.managementCost = managementCost;
         this.remainingDebt = price - downPayment;
         this.mortgage = this.calculateMonthlyMortgage();
         this.propertyTax = this.calculateYearlyPropertyTax();
@@ -32,13 +33,14 @@ class Property {
         const yearlyMortgage = this.mortgage * 12;
         const yearlyTax = this.propertyTax;
         const yearlyCleaning = this.cleaningCost * 12;
+        const yearlyManagement = this.managementCost * 12;
         const yearlyIncome = this.rentalIncome * 12;
 
         this.remainingDebt -= yearlyMortgage;
 
         return {
             income: yearlyIncome,
-            expenses: yearlyMortgage + yearlyTax + yearlyCleaning,
+            expenses: yearlyMortgage + yearlyTax + yearlyCleaning + yearlyManagement,
             remainingDebt: this.remainingDebt
         };
     }
@@ -51,9 +53,15 @@ class AirbnbBusinessSimulator {
         this.yearlyData = [];
         this.propertyCounter = 0;
         this.initialPropertyParams = null;
+        this.cashBalance = 0;
+        this.cashWithholdPercentage = 0;
     }
 
-    addProperty({ price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome }) {
+    setCashWithholdPercentage(percentage) {
+        this.cashWithholdPercentage = percentage;
+    }
+
+    addProperty({ price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome, managementCost }) {
         const property = new Property({
             name: `Property ${++this.propertyCounter}`,
             price,
@@ -61,11 +69,12 @@ class AirbnbBusinessSimulator {
             interestRate,
             loanTerm,
             cleaningCost,
-            rentalIncome
+            rentalIncome,
+            managementCost
         });
         this.properties.push(property);
         if (!this.initialPropertyParams) {
-            this.initialPropertyParams = { price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome };
+            this.initialPropertyParams = { price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome, managementCost };
         }
     }
 
@@ -82,10 +91,16 @@ class AirbnbBusinessSimulator {
                 totalDebt += remainingDebt;
             });
 
+            // Calculate the yearly profit and adjust for cash withholding
             let yearlyProfit = totalIncome - totalExpenses;
+            if (this.cashWithholdPercentage > 0) {
+                const withheldAmount = yearlyProfit * this.cashWithholdPercentage / 100;
+                yearlyProfit -= withheldAmount;
+                this.cashBalance += withheldAmount;
+            }
 
             // Calculate how many new properties can be bought with the profits
-            const { price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome } = this.initialPropertyParams;
+            const { price, downPayment, interestRate, loanTerm, cleaningCost, rentalIncome, managementCost } = this.initialPropertyParams;
             const newPropertiesCount = Math.floor(yearlyProfit / downPayment);
 
             for (let i = 0; i < newPropertiesCount; i++) {
@@ -95,7 +110,8 @@ class AirbnbBusinessSimulator {
                     interestRate,
                     loanTerm,
                     cleaningCost,
-                    rentalIncome
+                    rentalIncome,
+                    managementCost
                 });
                 yearlyProfit -= downPayment;
             }
@@ -105,7 +121,8 @@ class AirbnbBusinessSimulator {
                 totalIncome,
                 totalExpenses,
                 totalDebt,
-                propertiesCount: this.properties.length
+                propertiesCount: this.properties.length,
+                cashBalance: this.cashBalance
             });
         }
     }
@@ -157,6 +174,17 @@ class AirbnbBusinessSimulator {
                         borderWidth: 1
                     }]
                 };
+            case 'cash':
+                return {
+                    labels: this.yearlyData.map(data => `Year ${data.year}`),
+                    datasets: [{
+                        label: 'Cash Balance',
+                        data: this.yearlyData.map(data => data.cashBalance),
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    }]
+                };
             default:
                 return {};
         }
@@ -183,6 +211,7 @@ class AirbnbBusinessSimulator {
         this.renderChart('expenses', 'expensesChart');
         this.renderChart('debt', 'debtChart');
         this.renderChart('properties', 'propertiesChart');
+        this.renderChart('cash', 'cashChart');
     }
 }
 
@@ -194,8 +223,12 @@ simulator.addProperty({
     interestRate: 3.5,
     loanTerm: 30,
     cleaningCost: 4500,
-    rentalIncome: 33750
+    rentalIncome: 33750,
+    managementCost: 416
 }); // Initial property with named parameters
+
+// Set cash withholding percentage (e.g., 10% of income each year)
+simulator.setCashWithholdPercentage(5);
+
 simulator.simulateYears(10);
 simulator.renderAllCharts();
-
